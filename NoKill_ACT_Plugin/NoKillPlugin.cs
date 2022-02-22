@@ -80,6 +80,7 @@ namespace NoKill_ACT_Plugin
             string tips = "本插件免费，发布及更新地址 https://file.bluefissure.com/FFXIV/ 或 https://ngabbs.com/read.php?tid=30326362 ，勿从其他渠道（闲鱼卖家或神秘群友）获取以避免虚拟财产受到损失。";
             // MessageBox.Show(tips);
             Log("Info", tips);
+            statusLabel.Text = "Happy 6.0 :)";
         }
 
         void Log(string type, string message)

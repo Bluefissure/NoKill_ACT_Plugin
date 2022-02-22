@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using EasyHook;
-using Zodiark;
 using static EasyHook.RemoteHooking;
 
 namespace NKCore
@@ -11,7 +10,6 @@ namespace NKCore
     public class Main : IEntryPoint
     {
         Process FFXIV;
-        ZodiarkProcess ZodiarkFFXIV;
         public IntPtr LobbyErrorHandler { get; private set; }
         public IntPtr StartHandler { get; private set; }
         public IntPtr LoginHandler { get; private set; }
@@ -24,29 +22,31 @@ namespace NKCore
         private StartHandlerDelegate StartHookOriginal;
         private LoginHandlerDelegate LoginHookOriginal;
 
+        private SigScanner Scanner;
+
         public Main(IContext InContext, String ChannelName)
         {
             FFXIV = Process.GetCurrentProcess();
-            ZodiarkFFXIV = new ZodiarkProcess(FFXIV);
+            Scanner = new SigScanner(FFXIV.MainModule);
         }
 
         public void Run(IContext InContext, String ChannelName)
         {
 
-            LobbyErrorHandler = ZodiarkFFXIV.Scanner.ScanText("40 53 48 83 EC 30 48 8B D9 49 8B C8 E8 ?? ?? ?? ?? 8B D0");
+            LobbyErrorHandler = Scanner.ScanText("40 53 48 83 EC 30 48 8B D9 49 8B C8 E8 ?? ?? ?? ?? 8B D0");
             try
             {
-                StartHandler = ZodiarkFFXIV.Scanner.ScanText("E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? B2 01 49 8B CC");
+                StartHandler = Scanner.ScanText("E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? B2 01 49 8B CC");
             }
             catch (Exception)
             {
-                StartHandler = ZodiarkFFXIV.Scanner.ScanText("E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? B2 01 49 8B CD");
+                StartHandler = Scanner.ScanText("E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? B2 01 49 8B CD");
             }
             if (StartHandler == IntPtr.Zero)
             {
-                StartHandler = ZodiarkFFXIV.Scanner.ScanText("E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? B2 01 49 8B CD");
+                StartHandler = Scanner.ScanText("E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? B2 01 49 8B CD");
             }
-            LoginHandler = ZodiarkFFXIV.Scanner.ScanText("48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 48 83 EC 20 0F B6 81 ?? ?? ?? ?? 40 32 FF");
+            LoginHandler = Scanner.ScanText("48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 57 48 83 EC 20 0F B6 81 ?? ?? ?? ?? 40 32 FF");
 
             var LobbyErrorHook = LocalHook.Create(LobbyErrorHandler, new LobbyErrorHandlerDelegate(LobbyErrorHandlerDetour), null);
             var StartHook = LocalHook.Create(StartHandler, new StartHandlerDelegate(StartHandlerDetour), null);
@@ -69,21 +69,21 @@ namespace NKCore
 
         public Int64 StartHandlerDetour(Int64 a1, Int64 a2)
         {
-            var a1_88 = (UInt16)ZodiarkFFXIV.Memory.ReadInt16(new IntPtr(a1 + 88));
-            var a1_456 = ZodiarkFFXIV.Memory.ReadInt32(new IntPtr(a1 + 456));
+            var a1_88 = (UInt16)Marshal.ReadInt16(new IntPtr(a1 + 88));
+            var a1_456 = Marshal.ReadInt32(new IntPtr(a1 + 456));
             if (a1_456 != 0)
             {
-                ZodiarkFFXIV.Memory.WriteInt32(new IntPtr(a1 + 456), 0);
+                Marshal.WriteInt32(new IntPtr(a1 + 456), 0);
             }
             return (Int64)StartHookOriginal(a1, a2);
         }
 
         public Int64 LoginHandlerDetour(Int64 a1, Int64 a2)
         {
-            var a1_2165 = ZodiarkFFXIV.Memory.ReadByte(new IntPtr(a1 + 2165));
+            var a1_2165 = Marshal.ReadByte(new IntPtr(a1 + 2165));
             if (a1_2165 != 0)
             {
-                ZodiarkFFXIV.Memory.WriteByte(new IntPtr(a1 + 2165), 0);
+                Marshal.WriteByte(new IntPtr(a1 + 2165), 0);
             }
             return (Int64)LoginHookOriginal(a1, a2);
         }
