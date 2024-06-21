@@ -36,11 +36,11 @@ namespace NKCore
             LobbyErrorHandler = Scanner.ScanText("40 53 48 83 EC 30 48 8B D9 49 8B C8 E8 ?? ?? ?? ?? 8B D0");
             try
             {
-                StartHandler = Scanner.ScanText("E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? B2 01 49 8B CC");
+                StartHandler = Scanner.ScanText("E8 ?? ?? ?? ?? EB ?? B2 ?? 49 8B CC");
             }
             catch (Exception)
             {
-                StartHandler = Scanner.ScanText("E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? B2 01 49 8B CD");
+                StartHandler = Scanner.ScanText("48 89 5C 24 ?? 48 89 6C 24 ?? 48 89 74 24 ?? 48 89 7C 24 ?? 41 56 48 83 EC ?? 48 8B F9 48 8B F2 48 8B 49");
             }
             if (StartHandler == IntPtr.Zero)
             {
